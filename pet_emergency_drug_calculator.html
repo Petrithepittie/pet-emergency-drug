@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>寵物急救藥物劑量計算器</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    background: #F5F4F0;
+    color: #1A1A1A;
+    margin: 0;
+    padding: 24px 16px 60px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 20px;
+  }
+  .warning-banner {
+    background: #FCEBEB;
+    border: 1px solid #E24B4A;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #791F1F;
+    line-height: 1.6;
+  }
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+    background: #FFF;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid #E5E3DC;
+  }
+  .controls label {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .controls select, .controls input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #D4D2CB;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #FFF;
+    font-family: inherit;
+  }
+  .controls select:focus, .controls input:focus {
+    outline: none;
+    border-color: #1A1A1A;
+  }
+  .summary {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 12px;
+  }
+  .drug-card {
+    background: #FFF;
+    border: 1px solid #D4D2CB;
+    border-radius: 10px;
+    padding: 14px 18px 14px;
+    margin-bottom: 18px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .drug-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding-bottom: 10px;
+    margin-bottom: 6px;
+    border-bottom: 2px solid #1A1A1A;
+  }
+  .drug-num {
+    font-size: 11px;
+    font-weight: 600;
+    color: #666;
+    background: #F0EEE8;
+    padding: 2px 8px;
+    border-radius: 10px;
+    min-width: 22px;
+    text-align: center;
+  }
+  .drug-name {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+  .drug-indication {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+  }
+  .dose-row {
+    padding: 10px 0;
+    border-bottom: 1px solid #EDEBE4;
+  }
+  .dose-row:last-of-type { border-bottom: none; }
+  .dose-row.highlight {
+    padding: 12px 14px;
+    margin: 6px -6px;
+    background: #FCEBEB;
+    border-radius: 6px;
+    border-left: 3px solid #E24B4A;
+    border-bottom: none;
+  }
+  .dose-line-1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .dose-line-2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .dose-label {
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .dose-primary {
+    font-size: 20px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .highlight .dose-label, .highlight .dose-primary { color: #791F1F; }
+  .highlight .dose-primary { font-size: 24px; }
+  .highlight .dose-sub { color: #A32D2D; }
+  .star-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    color: #FCEBEB;
+    background: #791F1F;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .dose-sub {
+    font-size: 11px;
+    color: #888;
+  }
+  .dose-sub.right { text-align: right; }
+  .drug-note {
+    font-size: 11px;
+    color: #777;
+    margin-top: 10px;
+    line-height: 1.6;
+    background: #FAF9F5;
+    padding: 8px 10px;
+    border-radius: 5px;
+  }
+  .footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #D4D2CB;
+    font-size: 11px;
+    color: #999;
+    line-height: 1.6;
+  }
+  @media (max-width: 480px) {
+    body { padding: 16px 12px 40px; }
+    h1 { font-size: 20px; }
+    .drug-name { font-size: 19px; }
+    .dose-primary { font-size: 17px; }
+    .highlight .dose-primary { font-size: 20px; }
+    .controls { grid-template-columns: 1fr; }
+    .dose-line-1, .dose-line-2 {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+    .dose-sub.right { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>寵物急救藥物劑量計算器</h1>
+  <p class="subtitle">輸入動物種類與體重,自動列出常用急救藥物劑量與抽藥量</p>
+
+  <div class="warning-banner">
+    <strong>⚠ 急救用途</strong> — 本表為臨床急救參考劑量,實際使用請依當下狀況與獸醫師判斷調整。
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="species">動物種類</label>
+      <select id="species">
+        <option value="dog">Canine (狗)</option>
+        <option value="cat">Feline (貓)</option>
+      </select>
+    </div>
+    <div>
+      <label for="weight">體重 (kg)</label>
+      <input type="number" id="weight" value="10" min="0.1" max="100" step="0.1" />
+    </div>
+  </div>
+
+  <div id="result-container"></div>
+
+  <div class="footer">
+    參考來源:Plumb's Veterinary Drug Handbook、ACVECC RECOVER CPR Guidelines。劑量為一般參考值,個體狀況可能需調整。
+  </div>
+</div>
+
+<script>
+const drugs = [
+  {
+    name: 'Epinephrine',
+    indication: 'CPA、過敏性休克',
+    doses: [
+      { label: 'Low dose (CPR 首選)', dose: 0.01, unit: 'mg/kg', concentration: 1, route: 'IV / IO', highlight: true },
+      { label: 'High dose (長時間 CPA)', dose: 0.1, unit: 'mg/kg', concentration: 1, route: 'IV / IO' },
+      { label: 'ET 氣管內', dose: 0.1, unit: 'mg/kg', concentration: 1, route: 'ET' }
+    ],
+    note: '濃度 1:1000 = 1 mg/ml。CPR 每 3–5 分鐘可重複,優先用低劑量。'
+  },
+  {
+    name: 'Atropine',
+    indication: '心搏過緩、有機磷中毒、CPR (asystole / PEA)',
+    doses: [
+      { label: 'CPR / 心搏過緩', dose: 0.04, unit: 'mg/kg', concentration: 1, route: 'IV / IO', highlight: true },
+      { label: 'ET 氣管內', dose: 0.08, unit: 'mg/kg', concentration: 1, route: 'ET' },
+      { label: '有機磷中毒', dose: 0.2, unit: 'mg/kg', concentration: 1, route: '1/4 IV + 3/4 IM' }
+    ],
+    note: '濃度 1 mg/ml。中毒劑量需依瞳孔、唾液分泌反應調整。'
+  },
+  {
+    name: 'Dexamethasone',
+    indication: '過敏、休克、腦水腫、嚴重發炎',
+    doses: [
+      { label: '抗發炎', dose: 0.1, unit: 'mg/kg', concentration: 4, route: 'IV / IM / SC' },
+      { label: '抗過敏 / 休克', dose: 0.5, unit: 'mg/kg', concentration: 4, route: 'IV / IM' },
+      { label: '腦水腫', dose: 2, unit: 'mg/kg', concentration: 4, route: 'IV' }
+    ],
+    note: '濃度 Dex Sodium Phosphate 4 mg/ml。糖尿病、感染患者慎用。'
+  },
+  {
+    name: 'Diphenhydramine',
+    indication: '過敏反應、蜂螫、輸血前用藥',
+    doses: [
+      { label: '注射 (一般)', dose: 1, unit: 'mg/kg', concentration: 50, route: 'IM 深部肌肉' },
+      { label: '口服', dose: 2, unit: 'mg/kg', concentration: 50, route: 'PO' }
+    ],
+    note: '注射劑 50 mg/ml。⚠ 不可 IV bolus,易引起低血壓;應 IM 給予。貓劑量減半。'
+  },
+  {
+    name: 'Lidocaine (不含腎上腺素)',
+    indication: '心室性心律不整 (VT、VPC)',
+    doses: [
+      { label: '犬 — 抗心律不整 bolus', dose: 2, unit: 'mg/kg', concentration: 20, route: 'IV slow', speciesOnly: 'dog' },
+      { label: '犬 — CRI 持續輸注', dose: 0.05, unit: 'mg/kg/min', concentration: 20, route: 'IV CRI', speciesOnly: 'dog', cri: true },
+      { label: '貓 — 抗心律不整 (謹慎)', dose: 0.25, unit: 'mg/kg', concentration: 20, route: 'IV very slow', speciesOnly: 'cat' }
+    ],
+    note: '濃度 2% = 20 mg/ml。⚠ 貓對 lidocaine 極敏感,易造成神經毒性與心血管抑制,劑量必須極低且慢推。'
+  },
+  {
+    name: '50% Glucose',
+    indication: '低血糖 (幼犬、糖尿病、敗血症、肝衰竭)',
+    doses: [
+      { label: '低血糖緊急處置', dose: 1, unit: 'g/kg', concentration: 0.5, route: 'IV slow (≥3 倍稀釋)', glucose: true }
+    ],
+    note: '⚠ 50% 葡萄糖為高滲液,直接 IV 會造成血管炎與組織壞死。必須以生理食鹽水或注射用水稀釋至少 3 倍後緩慢給予 (5–10 分鐘)。'
+  }
+];
+
+const speciesEl = document.getElementById('species');
+const weightEl = document.getElementById('weight');
+const resultEl = document.getElementById('result-container');
+
+function fmt(n) {
+  if (n < 0.01) return n.toFixed(4);
+  if (n < 0.1) return n.toFixed(3);
+  if (n < 10) return n.toFixed(2);
+  return n.toFixed(1);
+}
+
+function render() {
+  const weight = parseFloat(weightEl.value);
+  const species = speciesEl.value;
+  if (!weight || weight <= 0) {
+    resultEl.innerHTML = '<p style="color: #888; font-size: 14px;">請輸入有效體重</p>';
+    return;
+  }
+
+  const speciesLabel = species === 'dog' ? 'Canine' : 'Feline';
+  let html = `<div class="summary">${speciesLabel} · ${weight} kg</div>`;
+
+  drugs.forEach((drug, drugIdx) => {
+    const applicableDoses = drug.doses.filter(d => !d.speciesOnly || d.speciesOnly === species);
+    if (applicableDoses.length === 0) return;
+
+    const dosesHtml = applicableDoses.map(d => {
+      let primaryDisplay, secondaryDisplay;
+
+      if (d.glucose) {
+        const grams = weight * d.dose;
+        const mlOriginal = grams / d.concentration;
+        const dilutent = mlOriginal * 3;
+        primaryDisplay = `抽 ${fmt(mlOriginal)} ml`;
+        secondaryDisplay = `+ ${fmt(dilutent)} ml 稀釋液　共 ${fmt(grams)} g 葡萄糖`;
+      } else if (d.cri) {
+        const ratePerMin = weight * d.dose;
+        const ratePerHour = ratePerMin * 60;
+        const mlPerHour = ratePerHour / d.concentration;
+        primaryDisplay = `${fmt(mlPerHour)} ml/hr`;
+        secondaryDisplay = `= ${fmt(ratePerHour)} mg/hr　(2% 原液)`;
+      } else {
+        const totalAmount = weight * d.dose;
+        const volumeMl = totalAmount / d.concentration;
+        primaryDisplay = `抽 ${fmt(volumeMl)} ml`;
+        secondaryDisplay = `${fmt(totalAmount)} mg　(${d.concentration} mg/ml)`;
+      }
+
+      const highlightClass = d.highlight ? 'highlight' : '';
+      const labelPrefix = d.highlight ? '<span class="star-tag">★ 首選</span>' : '';
+
+      return `
+        <div class="dose-row ${highlightClass}">
+          <div class="dose-line-1">
+            <div class="dose-label">${labelPrefix}${d.label}</div>
+            <div class="dose-primary">${primaryDisplay}</div>
+          </div>
+          <div class="dose-line-2">
+            <div class="dose-sub">${d.dose} ${d.unit} · ${d.route}</div>
+            <div class="dose-sub right">${secondaryDisplay}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    html += `
+      <div class="drug-card">
+        <div class="drug-header">
+          <span class="drug-num">${drugIdx + 1}</span>
+          <div style="flex: 1;">
+            <div class="drug-name">${drug.name}</div>
+            <div class="drug-indication">${drug.indication}</div>
+          </div>
+        </div>
+        ${dosesHtml}
+        <div class="drug-note">${drug.note}</div>
+      </div>
+    `;
+  });
+
+  resultEl.innerHTML = html;
+}
+
+speciesEl.addEventListener('change', render);
+weightEl.addEventListener('input', render);
+render();
+</script>
+</body>
+</html>
